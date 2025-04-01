@@ -24,4 +24,5 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.35.2
 	github.com/aws/smithy-go v1.22.2 // indirect
 	github.com/go-sql-driver/mysql v1.9.1
+	golang.org/x/text v0.23.0
 )
