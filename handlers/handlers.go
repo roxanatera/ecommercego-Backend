@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/aws/aws-lambda-go/events"
+	"ecommerce-Backend/routers"
 	
 )
 
@@ -83,6 +84,10 @@ func ProcesoOrder(body string, path string, method string, user string, id int, 
 	return 400, "Method Invalid"
 	}
 func ProcesoCategory(body string, path string, method string, user string, id int, request events.APIGatewayV2HTTPRequest) (int, string) {
+	switch method {
+	case "POST":
+		return routers.InsertCategory(body, user)
+}
 	return 400, "Method Invalid"
 	}
 

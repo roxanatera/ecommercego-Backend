@@ -20,3 +20,9 @@ type SignUp struct {
     UserFirstName string `json:"first_name"`
     UserLastName  string `json:"last_name"`
 }
+
+type Category struct {
+	CategID   int    `json:"categID"`
+	CategName string `json:"categName"`
+	CategPath string `json:"categPath"`
+}
