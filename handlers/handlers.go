@@ -4,6 +4,7 @@ import (
 	"ecommerce-Backend/auth"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"ecommerce-Backend/routers"
 
@@ -41,29 +42,36 @@ func Manejadores(path string, method string, body string, headers map[string]str
 }
 
 func validoAuthorization(path string, method string, body string, headers map[string]string) (bool, int, string) {
-	if (path == "product" && method == "GET") ||
-		(path == "category" && method == "GET") {
+	// Rutas públicas
+	if (path == "/product" && method == "GET") ||
+		(path == "/category" && method == "GET") {
 		return true, 200, "OK"
 	}
 
-	token := headers["Authorization"]
-	if len(token) == 0 {
+	// Obtener token (case-insensitive)
+	token := ""
+	for k, v := range headers {
+		if strings.EqualFold(k, "Authorization") {
+			token = strings.TrimPrefix(v, "Bearer ")
+			break
+		}
+	}
+
+	if token == "" {
 		return false, 401, "Token Requerido"
 	}
 
 	todoOk, err, msg := auth.ValidoToken(token)
 	if !todoOk {
 		if err != nil {
-			fmt.Println("Error: ", err.Error())
+			fmt.Println("Error validando token: ", err.Error())
 			return false, 401, err.Error()
-		} else {
-			fmt.Println("Error en el token: ", msg)
 		}
+		return false, 401, msg
 	}
-	fmt.Println("Token valido: ", msg)
+
 	return true, 200, msg
 }
-
 func ProcesoUsers(body string, path string, method string, user string, id string, request events.APIGatewayV2HTTPRequest) (int, string) {
 
 	return 400, "Method Invalid"
