@@ -12,37 +12,32 @@ import (
 )
 
 func Manejadores(path string, method string, body string, headers map[string]string, request events.APIGatewayV2HTTPRequest) (int, string) {
-    // Debug mejorado
-    fmt.Printf("DEBUG - Full Request Data:\nPath: %s\nMethod: %s\nHeaders: %+v\nPathParams: %+v\nBody: %s\n",
-        path, method, request.Headers, request.PathParameters, body)
-
-    // Obtener token de x-authorization (nuevo) o authorization (fallback)
+    // 1. Obtener token del header personalizado
     token := ""
     for key, value := range request.Headers {
-        if strings.EqualFold(key, "x-authorization") {
+        if strings.EqualFold(key, "x-auth") {
             token = strings.TrimPrefix(value, "Bearer ")
             break
         }
-        // Fallback para authorization si x-authorization no existe
-        if strings.EqualFold(key, "authorization") && token == "" {
-            token = strings.TrimPrefix(value, "Bearer ")
-        }
     }
 
-    // Validación del token (actualizada)
+    // 2. Debug mejorado
+    fmt.Printf("DEBUG - Request completa: %+v\n", request)
+    
     if token == "" {
-        return 401, "Token requerido (Headers recibidos: " + fmt.Sprintf("%v", request.Headers)
+        return 401, "Token requerido. Envía el token en el header 'x-auth'"
     }
 
-    // Procesar ID de path
-    id := request.PathParameters["id"]
-    idn, _ := strconv.Atoi(id)
-
-    // Validación de autorización (modificada para usar token directamente)
+    // 3. Validación del token
     isOk, statusCode, user := validoAuthorization(token, path, method)
     if !isOk {
         return statusCode, user
     }
+    // Procesar ID de path
+    id := request.PathParameters["id"]
+    idn, _ := strconv.Atoi(id)
+
+    
 
     // Routing existente
     switch path[1:5] {

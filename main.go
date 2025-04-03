@@ -5,6 +5,7 @@ import (
 	"ecommerce-Backend/awsgo"
 	"ecommerce-Backend/dbconfig"
 	"ecommerce-Backend/handlers"
+	"fmt"
 	"os"
 	"strings"
 
@@ -17,35 +18,40 @@ func main() {
 }
 
 func CodigoLambda(ctx context.Context, request events.APIGatewayV2HTTPRequest) (*events.APIGatewayProxyResponse, error) {
-
 	awsgo.InitAWS()
 
 	if !ValidarParametros() {
-		panic("Error: Debe enviar 'SecretName', 'UserPoolId', 'Region' y 'UrlPrefix' como variables de entorno.")
+		panic("Error: Debe enviar 'SecretName', 'UserPoolId', 'Region' y 'UrlPrefix' como variables de entorno")
 	}
 
-	var res *events.APIGatewayProxyResponse
-	path := strings.Replace(request.RawPath, os.Getenv("UrlPrefix"), ""	, -1)
+	// 1. Normalización de headers (case-insensitive)
+	normalizedHeaders := make(map[string]string)
+	for k, v := range request.Headers {
+		normalizedHeaders[strings.ToLower(k)] = v
+	}
+
+	// 2. Debug inicial
+	fmt.Printf("DEBUG - Incoming request: %+v\n", request)
+
+	// 3. Procesamiento principal
+	path := strings.Replace(request.RawPath, os.Getenv("UrlPrefix"), "", -1)
 	method := request.RequestContext.HTTP.Method
-	body := request.Body
-	header := request.Headers
 
 	dbconfig.ReadSecret(ctx)
 
-	status, message := handlers.Manejadores(path, method, body, header, request)
-	
-	headersResp := map[string]string{
-		"Content-Type": "application/json",
-	}
+	status, message := handlers.Manejadores(path, method, request.Body, normalizedHeaders, request)
 
-	res = &events.APIGatewayProxyResponse{
+	// 4. Construcción de respuesta con CORS
+	res := &events.APIGatewayProxyResponse{
 		StatusCode: status,
-		Body:      string(message),
-		Headers: headersResp,
+		Body:       message,
+		Headers: map[string]string{
+			"Content-Type":                "application/json",
+			"Access-Control-Allow-Origin": "*",
+		},
 	}
 
 	return res, nil
-
 }
 
 func ValidarParametros() bool{
