@@ -4,6 +4,7 @@ import (
 	"ecommerce-Backend/auth"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"ecommerce-Backend/routers"
 
@@ -41,27 +42,29 @@ func Manejadores(path string, method string, body string, headers map[string]str
 }
 
 func validoAuthorization(path string, method string, body string, headers map[string]string) (bool, int, string) {
-	if (path == "product" && method == "GET") ||
-		(path == "category" && method == "GET") {
-		return true, 200, "OK"
-	}
+    // 1. Obtener el token correctamente para HTTP API v2
+    token := ""
+    for key, value := range headers {
+        if strings.EqualFold(key, "http_authorization") || strings.EqualFold(key, "authorization") {
+            token = strings.TrimPrefix(value, "Bearer ")
+            break
+        }
+    }
 
-	token := headers["authorization"]
-	if len(token) == 0 {
-		return false, 401, "Token Requerido"
-	}
+    // 2. Verificar si el token está vacío
+    if token == "" {
+        fmt.Println("Debug - Headers recibidos:", headers) // Log para diagnóstico
+        return false, 401, "Token Requerido"
+    }
 
-	todoOk, err, msg := auth.ValidoToken(token)
-	if !todoOk {
-		if err != nil {
-			fmt.Println("Error: ", err.Error())
-			return false, 401, err.Error()
-		} else {
-			fmt.Println("Error en el token: ", msg)
-		}
-	}
-	fmt.Println("Token valido: ", msg)
-	return true, 200, msg
+    // 3. Validar el token (tu implementación existente)
+    todoOk, err, msg := auth.ValidoToken(token)
+    if !todoOk {
+        fmt.Printf("Debug - Token inválido. Error: %v, Msg: %s\n", err, msg)
+        return false, 401, msg
+    }
+
+    return true, 200, msg
 }
 
 func ProcesoUsers(body string, path string, method string, user string, id string, request events.APIGatewayV2HTTPRequest) (int, string) {
