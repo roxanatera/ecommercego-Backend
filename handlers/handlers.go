@@ -12,69 +12,73 @@ import (
 )
 
 func Manejadores(path string, method string, body string, headers map[string]string, request events.APIGatewayV2HTTPRequest) (int, string) {
-	// Debug: Verificar headers recibidos
-	fmt.Printf("DEBUG - Request Headers: %+v\n", request.Headers)
-	fmt.Printf("DEBUG - Path Parameters: %+v\n", request.PathParameters)
+    // Debug mejorado
+    fmt.Printf("DEBUG - Full Request Data:\nPath: %s\nMethod: %s\nHeaders: %+v\nPathParams: %+v\nBody: %s\n",
+        path, method, request.Headers, request.PathParameters, body)
 
-	id := request.PathParameters["id"]
-	idn, _ := strconv.Atoi(id)
+    // Obtener token de x-authorization (nuevo) o authorization (fallback)
+    token := ""
+    for key, value := range request.Headers {
+        if strings.EqualFold(key, "x-authorization") {
+            token = strings.TrimPrefix(value, "Bearer ")
+            break
+        }
+        // Fallback para authorization si x-authorization no existe
+        if strings.EqualFold(key, "authorization") && token == "" {
+            token = strings.TrimPrefix(value, "Bearer ")
+        }
+    }
 
-	// Usar request.Headers en lugar del parámetro headers
-	isOk, statusCode, user := validoAuthorization(path, method, body, request.Headers)
-	if !isOk {
-		return statusCode, user
-	}
+    // Validación del token (actualizada)
+    if token == "" {
+        return 401, "Token requerido (Headers recibidos: " + fmt.Sprintf("%v", request.Headers)
+    }
 
-	switch path[1:5] {
-	case "user":
-		return ProcesoUsers(body, path, method, user, id, request)
-	case "product":
-		return ProcesoProducts(body, path, method, user, idn, request)
-	case "stock":
-		return ProcesoStock(body, path, method, user, idn, request)
-	case "address":
-		return ProcesoAddress(body, path, method, user, idn, request)
-	case "order":
-		return ProcesoOrder(body, path, method, user, idn, request)
-	case "cate":
-		return ProcesoCategory(body, path, method, user, idn, request)
-	}
+    // Procesar ID de path
+    id := request.PathParameters["id"]
+    idn, _ := strconv.Atoi(id)
 
-	return 400, "Method Invalid"
+    // Validación de autorización (modificada para usar token directamente)
+    isOk, statusCode, user := validoAuthorization(token, path, method)
+    if !isOk {
+        return statusCode, user
+    }
+
+    // Routing existente
+    switch path[1:5] {
+    case "user":
+        return ProcesoUsers(body, path, method, user, id, request)
+    case "product":
+        return ProcesoProducts(body, path, method, user, idn, request)
+    case "stock":
+        return ProcesoStock(body, path, method, user, idn, request)
+    case "address":
+        return ProcesoAddress(body, path, method, user, idn, request)
+    case "order":
+        return ProcesoOrder(body, path, method, user, idn, request)
+    case "cate":
+        return ProcesoCategory(body, path, method, user, idn, request)
+    }
+
+    return 400, "Method Invalid"
 }
 
-func validoAuthorization(path string, method string, body string, headers map[string]string) (bool, int, string) {
-	// Debug: Verificar todos los headers disponibles
-	fmt.Printf("DEBUG - Validating auth with headers: %+v\n", headers)
+// Función validoAuthorization actualizada
+func validoAuthorization(token string, path string, method string) (bool, int, string) {
+    // Rutas públicas
+    if (path == "/product" && method == "GET") || 
+       (path == "/category" && method == "GET") {
+        return true, 200, "public"
+    }
 
-	// Rutas públicas
-	if (path == "/product" && method == "GET") ||
-		(path == "/category" && method == "GET") {
-		return true, 200, "OK"
-	}
+    // Validar el token recibido
+    todoOk, err, msg := auth.ValidoToken(token)
+    if !todoOk {
+        fmt.Printf("ERROR Validando token: %v - %s\n", err, msg)
+        return false, 401, msg
+    }
 
-	// Obtener token (case-insensitive)
-	token := ""
-	for k, v := range headers {
-		if strings.EqualFold(k, "authorization") {
-			token = strings.TrimPrefix(v, "Bearer ")
-			break
-		}
-	}
-
-	if token == "" {
-		fmt.Println("DEBUG - No authorization header found")
-		return false, 401, "Token Requerido"
-	}
-
-	todoOk, err, msg := auth.ValidoToken(token)
-	if !todoOk {
-		fmt.Printf("DEBUG - Token validation failed. Error: %v, Msg: %s\n", err, msg)
-		return false, 401, msg
-	}
-
-	fmt.Println("DEBUG - Token validado correctamente")
-	return true, 200, msg
+    return true, 200, msg
 }
 
 func ProcesoUsers(body string, path string, method string, user string, id string, request events.APIGatewayV2HTTPRequest) (int, string) {
