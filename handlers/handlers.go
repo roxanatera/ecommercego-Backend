@@ -12,8 +12,26 @@ import (
 )
 
 func Manejadores(path string, method string, body string, headers map[string]string, request events.APIGatewayV2HTTPRequest) (int, string) {
-	fmt.Println(" > Manejadores " + path + " > " + method)
+	// Debug 1: Imprimir estructura completa de request
+	fmt.Printf("DEBUG - Request Structure: %+v\n", request)
 
+	// Debug 2: Verificar múltiples fuentes posibles del token
+	tokenSources := map[string]string{
+		"headers['authorization']":              headers["authorization"],
+		"headers['Authorization']":              headers["Authorization"],
+		"request.Headers['authorization']":      request.Headers["authorization"],
+		"request.Headers['Authorization']":      request.Headers["Authorization"],
+		"request.Headers['http_authorization']": request.Headers["http_authorization"],
+	}
+
+	fmt.Println("DEBUG - Token Sources:")
+	for source, value := range tokenSources {
+		if value != "" {
+			fmt.Printf("%s: %s\n", source, value)
+		}
+	}
+
+	// Resto del código existente...
 	id := request.PathParameters["id"]
 	idn, _ := strconv.Atoi(id)
 
@@ -42,29 +60,29 @@ func Manejadores(path string, method string, body string, headers map[string]str
 }
 
 func validoAuthorization(path string, method string, body string, headers map[string]string) (bool, int, string) {
-    // 1. Obtener el token correctamente para HTTP API v2
-    token := ""
-    for key, value := range headers {
-        if strings.EqualFold(key, "http_authorization") || strings.EqualFold(key, "authorization") {
-            token = strings.TrimPrefix(value, "Bearer ")
-            break
-        }
-    }
+	// 1. Obtener el token correctamente para HTTP API v2
+	token := ""
+	for key, value := range headers {
+		if strings.EqualFold(key, "http_authorization") || strings.EqualFold(key, "authorization") {
+			token = strings.TrimPrefix(value, "Bearer ")
+			break
+		}
+	}
 
-    // 2. Verificar si el token está vacío
-    if token == "" {
-        fmt.Println("Debug - Headers recibidos:", headers) // Log para diagnóstico
-        return false, 401, "Token Requerido"
-    }
+	// 2. Verificar si el token está vacío
+	if token == "" {
+		fmt.Println("Debug - Headers recibidos:", headers) // Log para diagnóstico
+		return false, 401, "Token Requerido"
+	}
 
-    // 3. Validar el token (tu implementación existente)
-    todoOk, err, msg := auth.ValidoToken(token)
-    if !todoOk {
-        fmt.Printf("Debug - Token inválido. Error: %v, Msg: %s\n", err, msg)
-        return false, 401, msg
-    }
+	// 3. Validar el token (tu implementación existente)
+	todoOk, err, msg := auth.ValidoToken(token)
+	if !todoOk {
+		fmt.Printf("Debug - Token inválido. Error: %v, Msg: %s\n", err, msg)
+		return false, 401, msg
+	}
 
-    return true, 200, msg
+	return true, 200, msg
 }
 
 func ProcesoUsers(body string, path string, method string, user string, id string, request events.APIGatewayV2HTTPRequest) (int, string) {
