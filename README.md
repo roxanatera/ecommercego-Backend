@@ -4,6 +4,8 @@
 Backend desarrollado en **Go** y desplegado en una arquitectura completamente **serverless** en AWS. Este servicio gestiona usuarios, productos, categorías y órdenes mediante funciones Lambda, usando **Cognito** para autenticación y **Secrets Manager** para el manejo seguro de credenciales.
 
 ---
+![Arquitectura Backend AWS](https://github.com/roxanatera/ecommercego-Backend/blob/main/diagram-backend-go.png)
+
 
 ## 📦 Tecnologías utilizadas
 
@@ -68,4 +70,3 @@ Region=eu-west-1
 UrlPrefix=/api
 Usar herramientas como sam local invoke o Postman para pruebas de rutas.
 
-![Arquitectura Backend AWS](https://github.com/roxanatera/ecommercego-Backend/blob/main/diagram-backend-go.png)
