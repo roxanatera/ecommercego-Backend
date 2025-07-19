@@ -68,4 +68,4 @@ Region=eu-west-1
 UrlPrefix=/api
 Usar herramientas como sam local invoke o Postman para pruebas de rutas.
 
-![Arquitectura Backend AWS](https://raw.githubusercontent.com/roxanatera/ecommercego-Backend/main/diagram-backend-go.png)
+![Arquitectura Backend AWS](https://github.com/roxanatera/ecommercego-Backend/blob/main/diagram-backend-go.png)
