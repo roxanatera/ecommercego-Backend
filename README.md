@@ -1,42 +1,46 @@
-# 🛍️ E-commerce Backend (Serverless AWS + Go)
 
-Este proyecto implementa el backend de una aplicación de e-commerce utilizando una arquitectura serverless en AWS, escrita completamente en Go. La API expone endpoints HTTP seguros mediante AWS API Gateway, gestionando autenticación con Cognito y configuraciones sensibles con Secrets Manager.
+# ⚙️ E-commerce Backend (Go + AWS Serverless)
 
----
-
-## 🚀 Tecnologías principales
-
-- **AWS Lambda** – Funciones serverless que gestionan la lógica de negocio.
-- **AWS API Gateway** – Expone rutas RESTful seguras.
-- **AWS Cognito** – Autenticación de usuarios por token JWT.
-- **AWS Secrets Manager** – Gestión de credenciales (MySQL, claves, etc.).
-- **MySQL** – Base de datos relacional.
-- **Go (Golang)** – Lenguaje principal de desarrollo backend.
-
----
-![Diagram](diagram-backend-go.png)
-
+Backend desarrollado en **Go** y desplegado en una arquitectura completamente **serverless** en AWS. Este servicio gestiona usuarios, productos, categorías y órdenes mediante funciones Lambda, usando **Cognito** para autenticación y **Secrets Manager** para el manejo seguro de credenciales.
 
 ---
 
-## 🔐 Autenticación y Seguridad
+## 📦 Tecnologías utilizadas
 
-- Los usuarios deben enviar su token en el header `x-auth` como `Bearer <token>`.
-- Las rutas `/product [GET]` y `/category [GET]` son públicas.
-- El resto de rutas requieren autenticación con tokens válidos (Cognito).
-- Se realiza verificación básica del token con `auth.ValidoToken()`.
-
----
-
-## 🗃️ Base de Datos y Roles
-
-- Se accede a MySQL usando credenciales seguras cargadas dinámicamente desde AWS Secrets Manager.
-- La tabla `category` permite insertar categorías mediante el endpoint `/category [POST]`, pero sólo si el usuario tiene rol administrador.
-- `UserIsAdmin()` verifica si el `Username` extraído del token JWT tiene permisos de administrador en BBDD.
+- **Go (Golang)** – Lenguaje de programación principal.
+- **AWS Lambda** – Lógica backend serverless.
+- **Amazon API Gateway** – Exposición de endpoints HTTP REST.
+- **Amazon Cognito** – Autenticación de usuarios con tokens JWT.
+- **AWS Secrets Manager** – Gestión segura de credenciales y configuración.
+- **Amazon RDS (MySQL)** – Base de datos relacional.
+- **AWS SDK v2 for Go** – Cliente para interactuar con servicios AWS.
 
 ---
 
-## 📬 Ejemplo de Petición
+
+## 🧾 Endpoints principales
+
+Rutas como `GET /product` y `GET /category` son públicas. Todas las demás requieren validación de token.
+
+---
+
+| Método | Ruta         | Descripción                        |
+|--------|--------------|------------------------------------|
+| POST   | /signup      | Registro de nuevo usuario          |
+| POST   | /category    | Crear nueva categoría (admin only) |
+| GET    | /product     | Obtener productos (público)        |
+| GET    | /category    | Obtener categorías (público)       |
+
+---
+
+## 🧬 Variables de entorno requeridas
+
+```env
+SecretName=nombre_del_secreto_en_secrets_manager
+UserPoolId=eu-west-1_xxxxx
+Region=eu-west-1
+UrlPrefix=/api
+
 
 ### Crear una categoría (requiere token válido)
 
